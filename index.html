@@ -114,6 +114,38 @@
     td { padding: 4px 0; display: flex; gap: 12px; justify-content: space-between; }
     td::before { content: attr(data-label); color: var(--muted); font-size: 0.88rem; flex: none; }
   }
+
+  .badge { display: inline-block; padding: 2px 12px; border-radius: 999px; font-size: 0.88rem; font-weight: 500; }
+  .badge.ok { background: #e3f1ea; color: #1d6b45; }
+  .badge.no { background: #f9e7e7; color: #9b2c2c; }
+  .sum { color: var(--muted); white-space: nowrap; }
+  .dim { color: #b3bbc6; }
+
+  .right { display: flex; align-items: center; gap: 16px; }
+  .btn {
+    height: 44px; padding: 0 20px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    font: inherit; font-weight: 600;
+  }
+  .btn:hover { background: #194f59; }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.ghost:hover { background: #fafbfc; }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .formpanel { margin-bottom: 16px; padding: 22px; }
+  .formpanel[hidden] { display: none; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+  .fields label { display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; color: var(--muted); font-weight: 500; }
+  .fields input, .fields select {
+    height: 42px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); color: var(--ink); font: inherit;
+  }
+  .fields input:focus-visible, .fields select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; }
+  .msg { font-size: 0.92rem; color: var(--muted); }
+  .msg.err { color: #9b2c2c; }
+  .msg.good { color: #1d6b45; }
+  @media (max-width: 640px) { .right { width: 100%; justify-content: space-between; } }
 </style>
 </head>
 <body>
@@ -126,10 +158,19 @@
   <div class="tools">
     <label class="search">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="Search by student, subject, section or date" autocomplete="off" aria-label="Search records">
+      <input id="q" type="search" placeholder="Search by student, subject or section" autocomplete="off" aria-label="Search records">
     </label>
-    <span class="count" id="count" aria-live="polite"></span>
+    <div class="right"><span class="count" id="count" aria-live="polite"></span><button class="btn" id="toggleForm" type="button">Add record</button></div>
   </div>
+
+    <form class="panel formpanel" id="addForm" hidden>
+    <div class="fields" id="fields"></div>
+    <div class="actions">
+      <button class="btn" type="submit" id="saveBtn">Save record</button>
+      <button class="btn ghost" type="button" id="cancelForm">Close</button>
+      <span class="msg" id="msg" aria-live="polite"></span>
+    </div>
+  </form>
 
   <div class="panel">
     <div class="scroll" id="view">
@@ -146,26 +187,32 @@
   const countEl = document.getElementById('count');
   const searchEl = document.getElementById('q');
 
-  let rows = [];
-  let columns = [];
-  let sortKey = null;
-  let sortDir = 1;
+  let rows = [], infoCols = [], dates = [], attKey = null;
+  let sortKey = null, sortDir = 1;
 
-  const isDate = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v);
+  const day = v => String(v).slice(0, 10);
 
   function pretty(key) {
     const s = key.replace(/[_-]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim().toLowerCase();
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
-  function display(v) {
-    if (v === null || v === undefined || v === '') return '—';
-    if (isDate(v)) {
-      const d = new Date(v);
-      if (!isNaN(d)) return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-    }
-    if (typeof v === 'object') return JSON.stringify(v);
-    return String(v);
+  function shortDate(d) {
+    const t = new Date(d + 'T00:00:00Z');
+    return isNaN(t) ? d : t.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  }
+
+  const getAtt = r => (attKey && Array.isArray(r[attKey])) ? r[attKey] : [];
+  const statusOn = (r, d) => {
+    const e = getAtt(r).find(x => day(x.date) === d);
+    return e ? String(e.status) : '';
+  };
+  const presentCount = r => getAtt(r).filter(x => /present/i.test(x.status)).length;
+
+  function valueOf(r, key) {
+    if (key === '__sum') return presentCount(r);
+    if (key.startsWith('d:')) return statusOn(r, key.slice(2));
+    return r[key] ?? '';
   }
 
   function showState(title, text) {
@@ -179,61 +226,82 @@
     view.appendChild(d);
   }
 
+  function getColumns() {
+    const cols = infoCols.map(c => ({ key: c, label: pretty(c) }));
+    dates.forEach(d => cols.push({ key: 'd:' + d, label: shortDate(d) }));
+    if (attKey) cols.push({ key: '__sum', label: 'Present' });
+    return cols;
+  }
+
   function render() {
     const term = searchEl.value.trim().toLowerCase();
-    let list = rows.filter(r => !term || columns.some(c => display(r[c]).toLowerCase().includes(term)));
+    let list = rows.filter(r => !term || infoCols.some(c => String(r[c] ?? '').toLowerCase().includes(term)));
 
     if (sortKey) {
-      list = list.slice().sort((a, b) => {
-        const x = a[sortKey] ?? '', y = b[sortKey] ?? '';
-        return String(x).localeCompare(String(y), undefined, { numeric: true }) * sortDir;
-      });
+      list = list.slice().sort((a, b) =>
+        String(valueOf(a, sortKey)).localeCompare(String(valueOf(b, sortKey)), undefined, { numeric: true }) * sortDir);
     }
 
     countEl.textContent = list.length + (list.length === 1 ? ' record' : ' records');
 
     if (list.length === 0) {
-      showState('No matching records', 'Try a different name, subject or date.');
+      showState('No matching records', 'Try a different name, subject or section.');
       return;
     }
 
+    const cols = getColumns();
     const table = document.createElement('table');
-    const thead = table.createTHead().insertRow();
-    columns.forEach(c => {
+    const head = table.createTHead().insertRow();
+
+    cols.forEach(c => {
       const th = document.createElement('th');
       th.scope = 'col';
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.textContent = pretty(c);
-      if (sortKey === c) {
+      btn.textContent = c.label;
+      if (sortKey === c.key) {
         const a = document.createElement('span');
         a.className = 'arrow';
         a.textContent = sortDir === 1 ? '▲' : '▼';
         btn.appendChild(a);
       }
       btn.addEventListener('click', () => {
-        sortDir = sortKey === c ? -sortDir : 1;
-        sortKey = c;
+        sortDir = sortKey === c.key ? -sortDir : 1;
+        sortKey = c.key;
         render();
       });
       th.appendChild(btn);
-      thead.appendChild(th);
+      head.appendChild(th);
     });
 
-    const tbody = table.createTBody();
+    const body = table.createTBody();
     list.forEach(r => {
-      const tr = tbody.insertRow();
-      columns.forEach((c, i) => {
+      const tr = body.insertRow();
+      cols.forEach(c => {
         const td = tr.insertCell();
-        td.dataset.label = pretty(c);
-        if (/section/i.test(c)) {
+        td.dataset.label = c.label;
+
+        if (c.key === '__sum') {
+          td.className = 'sum';
+          td.textContent = presentCount(r) + ' of ' + getAtt(r).length;
+        } else if (c.key.startsWith('d:')) {
+          const st = statusOn(r, c.key.slice(2));
+          if (!st) {
+            td.innerHTML = '<span class="dim">—</span>';
+          } else {
+            const b = document.createElement('span');
+            b.className = 'badge ' + (/present/i.test(st) ? 'ok' : 'no');
+            b.textContent = st;
+            td.appendChild(b);
+          }
+        } else if (/section/i.test(c.key)) {
           const p = document.createElement('span');
           p.className = 'pill';
-          p.textContent = display(r[c]);
+          p.textContent = r[c.key] ?? '—';
           td.appendChild(p);
         } else {
-          td.textContent = display(r[c]);
-          if (/student|name/i.test(c) && !/subject/i.test(c)) td.className = 'primary';
+          td.textContent = r[c.key] ?? '—';
+          if (/student/i.test(c.key)) td.className = 'primary';
         }
       });
     });
@@ -255,22 +323,156 @@
       }
 
       rows = data;
+
+      // Hanapin ang field na array ng { date, status }
       const keys = [];
       data.forEach(r => Object.keys(r).forEach(k => {
         if (k !== '_id' && k !== '__v' && !keys.includes(k)) keys.push(k);
       }));
-      // Date first, then the rest in their original order
-      columns = keys.filter(k => /date/i.test(k)).concat(keys.filter(k => !/date/i.test(k)));
+      attKey = keys.find(k => data.some(r => Array.isArray(r[k]) && r[k].length && typeof r[k][0] === 'object')) || null;
 
-      const dateCol = columns.find(c => /date/i.test(c));
-      if (dateCol) { sortKey = dateCol; sortDir = -1; }
+      // Student, subject, section muna; kasunod ang iba
+      const rank = k => /student/i.test(k) ? 0 : /subject/i.test(k) ? 1 : /section/i.test(k) ? 2 : 3;
+      infoCols = keys.filter(k => k !== attKey).sort((a, b) => rank(a) - rank(b));
 
+      const set = new Set();
+      data.forEach(r => getAtt(r).forEach(x => set.add(day(x.date))));
+      dates = Array.from(set).sort();
+
+      sortKey = infoCols.find(c => /student/i.test(c)) || infoCols[0] || null;
+
+      buildForm();
       render();
     } catch (err) {
       countEl.textContent = '';
       showState('Could not load records', 'Check your connection and refresh the page. If it keeps happening, the API may be offline.');
     }
   }
+
+
+  const addForm = document.getElementById('addForm');
+  const msgEl = document.getElementById('msg');
+
+  function setMsg(text, kind) {
+    msgEl.textContent = text;
+    msgEl.className = 'msg' + (kind ? ' ' + kind : '');
+  }
+
+  function buildForm() {
+    const box = document.getElementById('fields');
+    box.innerHTML = '';
+
+    const add = (label, input, extra) => {
+      const l = document.createElement('label');
+      const t = document.createElement('span');
+      t.textContent = label;
+      l.appendChild(t);
+      l.appendChild(input);
+      if (extra) l.appendChild(extra);
+      box.appendChild(l);
+    };
+
+    infoCols.forEach(c => {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = 'f_' + c;
+      input.required = true;
+      input.autocomplete = 'off';
+      input.maxLength = 100;
+
+      const dl = document.createElement('datalist');
+      dl.id = 'dl_' + c;
+      Array.from(new Set(rows.map(r => r[c]).filter(Boolean))).sort().forEach(v => {
+        const o = document.createElement('option');
+        o.value = v;
+        dl.appendChild(o);
+      });
+      input.setAttribute('list', dl.id);
+
+      // Kapag existing na estudyante ang pinili, kusang pupunuin ang subject at section
+      if (/student/i.test(c)) {
+        input.addEventListener('change', () => {
+          const found = rows.find(r => r[c] === input.value.trim());
+          if (!found) return;
+          infoCols.forEach(o => {
+            if (o !== c) addForm.elements['f_' + o].value = found[o] ?? '';
+          });
+        });
+      }
+      add(pretty(c), input, dl);
+    });
+
+    const date = document.createElement('input');
+    date.type = 'date';
+    date.name = 'date';
+    date.required = true;
+    date.value = new Date().toISOString().slice(0, 10);
+    add('Date', date);
+
+    const status = document.createElement('select');
+    status.name = 'status';
+    ['Present', 'Absent'].forEach(v => {
+      const o = document.createElement('option');
+      o.value = v;
+      o.textContent = v;
+      status.appendChild(o);
+    });
+    add('Status', status);
+
+    const pass = document.createElement('input');
+    pass.type = 'password';
+    pass.name = 'passcode';
+    pass.required = true;
+    pass.autocomplete = 'off';
+    add('Passcode', pass);
+  }
+
+  document.getElementById('toggleForm').addEventListener('click', () => {
+    addForm.hidden = !addForm.hidden;
+    if (!addForm.hidden) {
+      setMsg('');
+      const first = addForm.querySelector('input');
+      if (first) first.focus();
+    }
+  });
+  document.getElementById('cancelForm').addEventListener('click', () => { addForm.hidden = true; });
+
+  addForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const match = {};
+    infoCols.forEach(c => { match[c] = addForm.elements['f_' + c].value.trim(); });
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    setMsg('Saving…');
+
+    try {
+      const res = await fetch(VERCEL_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-passcode': addForm.elements.passcode.value
+        },
+        body: JSON.stringify({
+          match,
+          attKey: attKey || 'attendance',
+          date: addForm.elements.date.value,
+          status: addForm.elements.status.value
+        })
+      });
+
+      if (res.status === 401) { setMsg('Wrong passcode. Try again.', 'err'); return; }
+      if (!res.ok) { setMsg('Could not save. Check the fields and try again.', 'err'); return; }
+
+      const out = await res.json();
+      await load();
+      setMsg(out.updated ? 'Attendance updated.' : 'Record saved.', 'good');
+    } catch (err) {
+      setMsg('Could not reach the server. Check your connection.', 'err');
+    } finally {
+      btn.disabled = false;
+    }
+  });
 
   searchEl.addEventListener('input', render);
   load();
