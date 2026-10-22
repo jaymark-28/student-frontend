@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab Attendance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --ink: #1b2430;
+    --muted: #66717f;
+    --line: #e2e6eb;
+    --accent: #1f5f6b;
+    --accent-soft: #e6f0f2;
+    --serif: "Fraunces", Georgia, "Times New Roman", serif;
+    --sans: "Figtree", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 64px 24px 80px; }
+
+  header { margin-bottom: 40px; }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+  }
+  .lede { color: var(--muted); margin: 0; max-width: 52ch; }
+
+  .tools {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .search { position: relative; flex: 1 1 280px; max-width: 420px; }
+  .search svg {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 18px; height: 18px; stroke: var(--muted); fill: none; stroke-width: 2;
+  }
+  .search input {
+    width: 100%; height: 44px; padding: 0 16px 0 42px;
+    border: 1px solid var(--line); border-radius: 10px;
+    background: var(--surface); color: var(--ink);
+    font: inherit;
+  }
+  .search input::placeholder { color: #98a2b0; }
+  .count { color: var(--muted); font-size: 0.92rem; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 16px 22px; }
+  thead th {
+    background: #fafbfc;
+    border-bottom: 1px solid var(--line);
+    font-weight: 600; font-size: 0.9rem; color: var(--muted);
+    white-space: nowrap;
+  }
+  thead button {
+    all: unset; cursor: pointer; display: inline-flex; gap: 6px; align-items: center;
+  }
+  thead button:hover { color: var(--ink); }
+  thead button:focus-visible, .search input:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .arrow { font-size: 0.75rem; color: var(--accent); }
+  tbody tr + tr td { border-top: 1px solid var(--line); }
+  tbody tr:hover { background: #fafbfc; }
+  td { vertical-align: top; }
+  td.primary { font-weight: 600; }
+  .pill {
+    display: inline-block; padding: 2px 12px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 500; font-size: 0.9rem;
+  }
+
+  .state { padding: 56px 24px; text-align: center; color: var(--muted); }
+  .state strong { display: block; color: var(--ink); font-size: 1.05rem; margin-bottom: 4px; }
+  .spinner {
+    width: 22px; height: 22px; margin: 0 auto 14px;
+    border: 2px solid var(--line); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
+  @media (max-width: 640px) {
+    main { padding: 40px 16px 56px; }
+    thead { display: none; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    tbody tr { padding: 14px 18px; }
+    tbody tr + tr { border-top: 1px solid var(--line); }
+    tbody tr + tr td { border-top: 0; }
+    td { padding: 4px 0; display: flex; gap: 12px; justify-content: space-between; }
+    td::before { content: attr(data-label); color: var(--muted); font-size: 0.88rem; flex: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Lab Attendance</h1>
+    <p class="lede">Daily attendance records for every lab session, pulled live from the class database.</p>
+  </header>
+
+  <div class="tools">
+    <label class="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search by student, subject, section or date" autocomplete="off" aria-label="Search records">
+    </label>
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+
+  <div class="panel">
+    <div class="scroll" id="view">
+      <div class="state"><div class="spinner"></div>Loading records…</div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Palitan ito ng sarili mong Vercel URL
+  const VERCEL_API_URL = 'https://student-api-backend-two.vercel.app/api';
+
+  const view = document.getElementById('view');
+  const countEl = document.getElementById('count');
+  const searchEl = document.getElementById('q');
+
+  let rows = [];
+  let columns = [];
+  let sortKey = null;
+  let sortDir = 1;
+
+  const isDate = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v);
+
+  function pretty(key) {
+    const s = key.replace(/[_-]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim().toLowerCase();
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function display(v) {
+    if (v === null || v === undefined || v === '') return '—';
+    if (isDate(v)) {
+      const d = new Date(v);
+      if (!isNaN(d)) return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+    if (typeof v === 'object') return JSON.stringify(v);
+    return String(v);
+  }
+
+  function showState(title, text) {
+    view.innerHTML = '';
+    const d = document.createElement('div');
+    d.className = 'state';
+    const s = document.createElement('strong');
+    s.textContent = title;
+    d.appendChild(s);
+    d.appendChild(document.createTextNode(text));
+    view.appendChild(d);
+  }
+
+  function render() {
+    const term = searchEl.value.trim().toLowerCase();
+    let list = rows.filter(r => !term || columns.some(c => display(r[c]).toLowerCase().includes(term)));
+
+    if (sortKey) {
+      list = list.slice().sort((a, b) => {
+        const x = a[sortKey] ?? '', y = b[sortKey] ?? '';
+        return String(x).localeCompare(String(y), undefined, { numeric: true }) * sortDir;
+      });
+    }
+
+    countEl.textContent = list.length + (list.length === 1 ? ' record' : ' records');
+
+    if (list.length === 0) {
+      showState('No matching records', 'Try a different name, subject or date.');
+      return;
+    }
+
+    const table = document.createElement('table');
+    const thead = table.createTHead().insertRow();
+    columns.forEach(c => {
+      const th = document.createElement('th');
+      th.scope = 'col';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = pretty(c);
+      if (sortKey === c) {
+        const a = document.createElement('span');
+        a.className = 'arrow';
+        a.textContent = sortDir === 1 ? '▲' : '▼';
+        btn.appendChild(a);
+      }
+      btn.addEventListener('click', () => {
+        sortDir = sortKey === c ? -sortDir : 1;
+        sortKey = c;
+        render();
+      });
+      th.appendChild(btn);
+      thead.appendChild(th);
+    });
+
+    const tbody = table.createTBody();
+    list.forEach(r => {
+      const tr = tbody.insertRow();
+      columns.forEach((c, i) => {
+        const td = tr.insertCell();
+        td.dataset.label = pretty(c);
+        if (/section/i.test(c)) {
+          const p = document.createElement('span');
+          p.className = 'pill';
+          p.textContent = display(r[c]);
+          td.appendChild(p);
+        } else {
+          td.textContent = display(r[c]);
+          if (/student|name/i.test(c) && !/subject/i.test(c)) td.className = 'primary';
+        }
+      });
+    });
+
+    view.innerHTML = '';
+    view.appendChild(table);
+  }
+
+  async function load() {
+    try {
+      const res = await fetch(VERCEL_API_URL);
+      if (!res.ok) throw new Error('Request failed');
+      const data = await res.json();
+
+      if (!Array.isArray(data) || data.length === 0) {
+        countEl.textContent = '';
+        showState('No records yet', 'Attendance entries will appear here once they are added to the database.');
+        return;
+      }
+
+      rows = data;
+      const keys = [];
+      data.forEach(r => Object.keys(r).forEach(k => {
+        if (k !== '_id' && k !== '__v' && !keys.includes(k)) keys.push(k);
+      }));
+      // Date first, then the rest in their original order
+      columns = keys.filter(k => /date/i.test(k)).concat(keys.filter(k => !/date/i.test(k)));
+
+      const dateCol = columns.find(c => /date/i.test(c));
+      if (dateCol) { sortKey = dateCol; sortDir = -1; }
+
+      render();
+    } catch (err) {
+      countEl.textContent = '';
+      showState('Could not load records', 'Check your connection and refresh the page. If it keeps happening, the API may be offline.');
+    }
+  }
+
+  searchEl.addEventListener('input', render);
+  load();
+</script>
+</body>
+</html>
