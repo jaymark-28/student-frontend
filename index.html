@@ -4,123 +4,280 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Academic Lab Attendance</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: light;
-    --bg:#f6f4f0; --surface:#fff; --soft:#faf8f5; --ink:#1f1a17; --muted:#8a7f76; --line:#e9e4dc;
-    --brown:#4a3426; --brown-soft:#8c6a50; --green:#4f7a5a; --orange:#d98b3a; --red:#c8624c;
-    --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
-    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
-    --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+    --bg:#ece9e1;
+    --surface:#fff;
+    --soft:#f4f1ea;
+    --ink:#1c1c1c;
+    --muted:#5c5c5c;
+    --line:#cfc8bb;
+    --brown:#1f3d5a;
+    --brown-soft:#3d5a73;
+    --green:#2f6b45;
+    --orange:#b56a1a;
+    --red:#a33b2b;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+    --rule:#1f3d5a;
   }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 var(--sans); }
-  svg.i { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:none; }
-  .wrap { max-width:972px; margin:0 auto; padding:0 20px; }
-
-  nav { background:var(--surface); border-bottom:1px solid var(--line); }
-  nav .wrap { height:68px; display:flex; align-items:center; justify-content:space-between; }
-  .brand { display:flex; align-items:center; gap:12px; font:700 11px var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--brown); }
-  .logo { width:30px; height:30px; border-radius:8px; background:var(--brown); color:#fff; display:grid; place-items:center; }
-
-  .conn { display:inline-flex; align-items:center; gap:8px; padding:4px 12px; border:1px solid var(--line); border-radius:999px; background:var(--surface); font-size:12px; color:var(--ink); white-space:nowrap; }
-  .dot { width:7px; height:7px; border-radius:50%; background:var(--muted); }
+  body {
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font:15px/1.45 var(--sans);
+  }
+  body::before {
+    content:"";
+    display:block;
+    height:6px;
+    background:var(--rule);
+  }
+  svg.i { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+  .wrap { max-width:1100px; margin:0 auto; padding:0 22px; }
+  nav {
+    background:#f8f5ef;
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap { height:56px; display:flex; align-items:center; justify-content:space-between; }
+  .brand {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font:600 13px var(--sans);
+    letter-spacing:.02em;
+    color:var(--ink);
+  }
+  .logo {
+    width:26px;
+    height:26px;
+    border:1px solid var(--rule);
+    background:var(--surface);
+    color:var(--rule);
+    display:grid;
+    place-items:center;
+  }
+  .conn {
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .dot { width:8px; height:8px; border-radius:50%; background:#b8b3a8; }
   .conn.ok .dot { background:var(--green); }
   .conn.err .dot { background:var(--red); }
-
-  main.wrap { padding:48px 20px 96px; }
-  .hero { display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end; justify-content:space-between; padding-bottom:32px; border-bottom:1px solid var(--line); margin-bottom:40px; }
+  main.wrap { padding:28px 22px 80px; }
+  .hero {
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px 24px;
+    align-items:flex-end;
+    justify-content:space-between;
+    margin-bottom:22px;
+    padding-bottom:14px;
+    border-bottom:2px solid var(--rule);
+  }
   .heroText { align-self:flex-end; }
   .side { display:flex; flex-direction:column; align-items:flex-end; justify-content:space-between; gap:18px; }
-  .eyebrow { font:500 11px var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--brown-soft); margin:0 0 8px; }
-  h1 { font:400 clamp(2.2rem,5vw,3rem)/1 var(--serif); letter-spacing:-.02em; margin:0 0 8px; }
-  .sub { margin:0; color:var(--muted); }
-
-  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:38px; padding:0 16px; border-radius:8px; border:1px solid var(--brown);
-    background:var(--brown); color:#fff; font:600 13px var(--sans); cursor:pointer; }
-  .btn:hover { background:#3b281c; }
+  .eyebrow {
+    margin:0 0 4px;
+    font:600 11px var(--sans);
+    color:var(--brown-soft);
+  }
+  h1 {
+    margin:0 0 4px;
+    font:700 1.7rem/1.15 var(--serif);
+  }
+  .sub { margin:0; color:var(--muted); font-size:14px; max-width:42em; }
+  .btn {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    height:34px;
+    padding:0 14px;
+    border:1px solid var(--rule);
+    background:var(--rule);
+    color:#fff;
+    font:600 13px var(--sans);
+    cursor:pointer;
+  }
+  .btn:hover { background:#162e44; }
   .btn.ghost { background:var(--surface); color:var(--ink); border-color:var(--line); }
   .btn.ghost:hover { background:var(--soft); }
   .btn:disabled { opacity:.6; cursor:default; }
   :is(.btn,input,select,th button):focus-visible { outline:2px solid var(--brown-soft); outline-offset:2px; }
-
-  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:18px; margin-bottom:32px; }
-  .stat { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px 20px 16px; }
+  .stats {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:0;
+    margin-bottom:18px;
+    background:var(--surface);
+    border:1px solid var(--line);
+  }
+  .stat {
+    padding:12px 16px 14px;
+    border-right:1px solid var(--line);
+    background:transparent;
+  }
+  .stat:last-child { border-right:0; }
   .stat .row { display:flex; justify-content:space-between; align-items:center; }
-  .stat small { font:500 11px var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--brown); }
-  .ib { width:28px; height:28px; border:1px solid var(--line); border-radius:7px; background:var(--soft); display:grid; place-items:center; color:var(--brown-soft); }
-  .stat .val { display:flex; justify-content:space-between; align-items:flex-end; margin:10px 0 14px; gap:8px; }
-  .stat b { font:400 2.5rem/1 var(--serif); letter-spacing:-.02em; }
-  .chip { font:500 10.5px var(--mono); color:var(--brown-soft); background:var(--soft); border:1px solid var(--line); border-radius:4px; padding:2px 8px; white-space:nowrap; }
-  .track { height:3px; border-radius:3px; background:var(--line); overflow:hidden; }
-  .track i { display:block; height:100%; width:0; border-radius:3px; transition:width .4s; }
-
-  .card { background:var(--surface); border:1px solid var(--line); border-radius:12px; }
-  .tools { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:14px 16px; margin-bottom:32px; }
-  .search { position:relative; flex:1 1 200px; max-width:250px; }
-  .search svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--muted); width:15px; height:15px; }
-  input, select { height:36px; border:1px solid var(--line); border-radius:8px; background:var(--soft); color:var(--ink); font:13px var(--sans); padding:0 12px; }
-  .search input { width:100%; padding-left:34px; }
+  .stat small {
+    font:600 11px var(--sans);
+    color:var(--muted);
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .ib { display:none; }
+  .stat .val { display:flex; align-items:baseline; gap:8px; margin:6px 0 8px; }
+  .stat b { font:700 1.65rem/1 var(--sans); letter-spacing:-.02em; }
+  .chip {
+    font:12px var(--sans);
+    color:var(--muted);
+    background:none;
+    border:0;
+    padding:0;
+  }
+  .track { height:2px; background:#e4dfd4; overflow:hidden; }
+  .track i { display:block; height:100%; width:0; }
+  .card {
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:0;
+  }
+  .tools {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 10px;
+    align-items:center;
+    padding:10px 12px;
+    margin-bottom:0;
+    border-bottom:0;
+  }
+  .search { position:relative; flex:1 1 220px; max-width:280px; }
+  .search svg { position:absolute; left:9px; top:50%; transform:translateY(-50%); color:var(--muted); width:14px; height:14px; }
+  input, select {
+    height:34px;
+    border:1px solid #bdb6a8;
+    border-radius:0;
+    background:#fff;
+    color:var(--ink);
+    font:13px var(--sans);
+    padding:0 10px;
+  }
+  .search input { width:100%; padding-left:30px; }
   .grow { flex:1; }
-  .count { font:400 11px var(--mono); color:var(--muted); }
-  .count b { color:var(--ink); }
-
-  .panel { overflow:hidden; background:var(--soft); }
+  .count { font:12px var(--sans); color:var(--muted); }
+  .count b { color:var(--ink); font-weight:700; }
+  .panel { overflow:hidden; background:var(--surface); border-top:0; }
   .scroll { overflow-x:auto; }
   table { width:100%; border-collapse:collapse; }
-  th, td { text-align:left; padding:14px 20px; }
-  thead th { background:var(--soft); border-bottom:1px solid var(--line); font:700 10.5px var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--brown); white-space:nowrap; }
-  th button { all:unset; cursor:pointer; display:inline-flex; flex-direction:column; gap:2px; }
+  th, td { text-align:left; padding:9px 12px; }
+  thead th {
+    background:#f1eee6;
+    border-bottom:1px solid var(--line);
+    border-top:1px solid var(--line);
+    font:600 11px var(--sans);
+    color:#334155;
+    white-space:nowrap;
+    letter-spacing:.01em;
+    text-transform:none;
+  }
+  th button { all:unset; cursor:pointer; display:inline-flex; flex-direction:column; gap:1px; }
   th.c { text-align:center; } th.c button { align-items:center; }
   th button:hover { color:var(--ink); }
-  th .s { font:400 9.5px var(--mono); letter-spacing:.04em; text-transform:lowercase; color:var(--muted); }
+  th .s { font:400 10px var(--sans); letter-spacing:0; text-transform:none; color:var(--muted); }
   .arrow { font-size:9px; margin-left:4px; }
-  tbody td { border-bottom:1px solid var(--line); vertical-align:middle; }
+  tbody td { border-bottom:1px solid #ece7dc; vertical-align:middle; }
+  tbody tr:nth-child(even) { background:#faf8f3; }
   tbody tr:last-child td { border-bottom:0; }
-  tbody tr:hover { background:var(--surface); }
+  tbody tr:hover { background:#fff7e6; }
   td.primary { font-weight:600; }
   td.c { text-align:center; }
-  .tag { display:inline-block; font:500 11px var(--mono); border:1px solid var(--line); background:var(--soft); border-radius:4px; padding:2px 8px; }
-  .pill { display:inline-flex; align-items:center; gap:6px; padding:3px 12px; border:1px solid var(--line); border-radius:999px; background:var(--soft); font-size:12px; }
+  .tag {
+    display:inline-block;
+    font:12px var(--sans);
+    border:1px solid var(--line);
+    background:#fff;
+    padding:1px 6px;
+  }
+  .pill {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:0;
+    border:0;
+    background:none;
+    font-size:12px;
+    font-weight:600;
+  }
   .pill i { width:6px; height:6px; border-radius:50%; }
-  .pill.ok i { background:var(--green); } .pill.no i { background:var(--red); }
-  .dim { color:var(--line); }
-  .rate { display:flex; align-items:center; gap:10px; font:700 12px var(--mono); min-width:120px; }
-  .rate .track { width:64px; height:5px; }
-
-  .state { padding:56px 24px; text-align:center; color:var(--muted); }
-  .state strong { display:block; color:var(--ink); font:400 1.6rem var(--serif); margin-bottom:6px; }
+  .pill.ok { color:var(--green); } .pill.ok i { background:var(--green); }
+  .pill.no { color:var(--red); } .pill.no i { background:var(--red); }
+  .dim { color:#c5bfb3; }
+  .rate { display:flex; align-items:center; gap:8px; font:600 12px var(--sans); min-width:108px; }
+  .rate .track { width:56px; height:4px; }
+  .state { padding:48px 20px; text-align:center; color:var(--muted); }
+  .state strong { display:block; color:var(--ink); font:700 1.15rem var(--sans); margin-bottom:6px; }
   .state .btn { margin-top:16px; }
-  .skel { padding:22px; display:grid; gap:14px; }
-  .skel i { height:16px; border-radius:6px; background:linear-gradient(90deg,var(--line),var(--soft),var(--line)); background-size:200% 100%; animation:sh 1.3s linear infinite; }
+  .skel { padding:18px; display:grid; gap:10px; }
+  .skel i { height:12px; background:#e4dfd4; }
   @keyframes sh { to { background-position:-200% 0; } }
-
-  .formpanel { margin-bottom:22px; padding:22px; }
+  .formpanel { margin:0 0 18px; padding:16px 18px 18px; }
   .formpanel[hidden] { display:none; }
-  .formpanel h2 { font:400 1.6rem var(--serif); margin:0 0 16px; }
-  .fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
-  .fields label { display:flex; flex-direction:column; gap:6px; font:500 11px var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--brown-soft); }
-  .fields input, .fields select { height:40px; background:var(--surface); }
-  .actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:18px; }
+  .formpanel h2 { font:700 1.1rem var(--sans); margin:0 0 14px; }
+  .fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+  .fields label {
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    font:600 11px var(--sans);
+    letter-spacing:0;
+    text-transform:none;
+    color:var(--muted);
+  }
+  .fields input, .fields select { height:36px; background:var(--surface); }
+  .actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:14px; }
   .msg { font-size:13px; color:var(--muted); } .msg.err { color:var(--red); }
-
-  .toast { position:fixed; left:50%; bottom:28px; transform:translate(-50%,20px); background:var(--brown); color:#fff; padding:11px 18px; border-radius:10px;
-    font-weight:500; opacity:0; pointer-events:none; transition:.25s; max-width:90vw; }
-  .toast.show { opacity:1; transform:translate(-50%,0); }
+  .toast {
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    left:auto;
+    transform:none;
+    background:#1c1c1c;
+    color:#fff;
+    padding:10px 14px;
+    font:500 13px var(--sans);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s;
+    max-width:90vw;
+  }
+  .toast.show { opacity:1; transform:none; }
   .toast.err { background:var(--red); }
   @media (prefers-reduced-motion: reduce) { .skel i, .toast, .track i { animation:none; transition:none; } }
-
+  @media (max-width:900px) {
+    .stats { grid-template-columns:1fr 1fr; }
+    .stat:nth-child(2) { border-right:0; }
+    .stat:nth-child(1), .stat:nth-child(2) { border-bottom:1px solid var(--line); }
+  }
   @media (max-width:700px) {
     .search { max-width:none; }
+    .stats { grid-template-columns:1fr; }
+    .stat { border-right:0; border-bottom:1px solid var(--line); }
+    .stat:last-child { border-bottom:0; }
     thead { display:none; }
     table, tbody, tr, td { display:block; width:100%; }
-    tbody tr { padding:14px 16px; border-bottom:1px solid var(--line); }
+    tbody tr { padding:12px 14px; border-bottom:1px solid var(--line); }
+    tbody tr:nth-child(even) { background:#fff; }
     tbody tr:last-child { border-bottom:0; }
     tbody td { border-bottom:0; padding:4px 0; display:flex; gap:12px; justify-content:space-between; align-items:center; text-align:right; }
-    td::before { content:attr(data-label); font:500 10.5px var(--mono); text-transform:uppercase; letter-spacing:.08em; color:var(--muted); flex:none; }
+    td::before { content:attr(data-label); font:600 11px var(--sans); color:var(--muted); flex:none; }
     td.primary { text-align:left; }
   }
 </style>
@@ -135,7 +292,6 @@
     <span class="conn" id="conn"><span class="dot"></span><span id="connText">Connecting…</span></span>
   </div>
 </nav>
-
 <main class="wrap">
   <header class="hero">
     <div class="heroText">
@@ -147,7 +303,6 @@
       <svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add record
     </button>
   </header>
-
   <form class="card formpanel" id="addForm" hidden>
     <h2>Add attendance</h2>
     <div class="fields" id="fields"></div>
@@ -157,7 +312,6 @@
       <span class="msg" id="msg" aria-live="polite"></span>
     </div>
   </form>
-
   <section class="stats" aria-label="Summary">
     <div class="stat">
       <div class="row"><small>Total students</small><span class="ib"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.5 3-5.5 6.5-5.5s6 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .6 3.3 2.4 3.5 5.2"/></svg></span></div>
@@ -180,7 +334,6 @@
       <div class="track"><i id="bAbsent" style="background:var(--red)"></i></div>
     </div>
   </section>
-
   <div class="card tools">
     <label class="search">
       <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -194,30 +347,24 @@
       <svg class="i" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>Export CSV
     </button>
   </div>
-
   <div class="card panel"><div class="scroll" id="view"></div></div>
 </main>
 <div class="toast" id="toast" role="status"></div>
-
 <script>
   // Palitan kung magbago ang Vercel domain mo (may /api sa dulo)
   const VERCEL_API_URL = 'https://student-api-backend-indol.vercel.app/api';
-
   const $ = id => document.getElementById(id);
   const view = $('view'), searchEl = $('q'), subjEl = $('fSubject'), sectEl = $('fSection'), countEl = $('count');
   const addForm = $('addForm'), msgEl = $('msg');
-
   let rows = [], infoCols = [], dates = [], attKey = null, shown = [];
   let keys = { student: null, subject: null, section: null };
   let sortKey = null, sortDir = 1;
-
   const day = v => String(v).slice(0, 10);
   const isPresent = s => /present/i.test(String(s));
   const getAtt = r => (attKey && Array.isArray(r[attKey])) ? r[attKey] : [];
   const statusOn = (r, d) => { const e = getAtt(r).find(x => day(x.date) === d); return e ? String(e.status) : ''; };
   const presentCount = r => getAtt(r).filter(x => isPresent(x.status)).length;
   const rateOf = r => { const n = getAtt(r).length; return n ? Math.round(presentCount(r) / n * 100) : 0; };
-
   function pretty(key) {
     const s = key.replace(/[_-]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').trim().toLowerCase();
     return s.charAt(0).toUpperCase() + s.slice(1);
@@ -231,13 +378,11 @@
     if (key.startsWith('d:')) return statusOn(r, key.slice(2));
     return r[key] ?? '';
   }
-
   function setConn(state) {
     const el = $('conn');
     el.className = 'conn ' + state;
     $('connText').textContent = state === 'ok' ? 'Database connected' : state === 'err' ? 'Connection failed' : 'Connecting…';
   }
-
   let tt;
   function toast(text, kind) {
     const t = $('toast');
@@ -246,7 +391,6 @@
     clearTimeout(tt);
     tt = setTimeout(() => { t.className = 'toast'; }, 3500);
   }
-
   function showSkeleton() { view.innerHTML = '<div class="skel"><i></i><i></i><i></i><i></i><i></i></div>'; }
   function showState(title, text, retry) {
     view.innerHTML = '';
@@ -267,7 +411,6 @@
     }
     view.appendChild(d);
   }
-
   function updateStats(list) {
     let entries = 0, present = 0;
     list.forEach(r => { entries += getAtt(r).length; present += presentCount(r); });
@@ -275,34 +418,29 @@
     const today = new Date().toISOString().slice(0, 10);
     const done = dates.filter(d => d <= today).length;
     const pct = entries ? Math.round(present / entries * 100) : 0;
-
     $('sStudents').textContent = list.length;
     $('sSessions').textContent = dates.length;
     $('sRate').innerHTML = entries ? pct + '<span style="font-size:1.1rem;color:var(--muted)">%</span>' : '–';
     $('sAbsent').textContent = absent;
     $('cSessions').textContent = done + ' completed';
     $('cRate').textContent = entries ? present + ' of ' + entries + ' present' : 'No data';
-
     $('bStudents').style.width = rows.length ? (list.length / rows.length * 100) + '%' : '0%';
     $('bSessions').style.width = dates.length ? (done / dates.length * 100) + '%' : '0%';
     $('bRate').style.width = pct + '%';
     $('bAbsent').style.width = entries ? (absent / entries * 100) + '%' : '0%';
   }
-
   function getColumns() {
     const cols = infoCols.map(c => ({ key: c, label: pretty(c) }));
     dates.forEach((d, i) => cols.push({ key: 'd:' + d, label: shortDate(d), sub: 'session ' + String(i + 1).padStart(2, '0'), center: true }));
     if (attKey) cols.push({ key: '__rate', label: 'Attendance' });
     return cols;
   }
-
   function render() {
     const term = searchEl.value.trim().toLowerCase();
     const sub = subjEl.value, sec = sectEl.value;
     let list = rows.filter(r =>
       (!term || infoCols.some(c => String(r[c] ?? '').toLowerCase().includes(term))) &&
       (!sub || r[keys.subject] === sub) && (!sec || r[keys.section] === sec));
-
     if (sortKey) {
       list = list.slice().sort((a, b) =>
         String(valueOf(a, sortKey)).localeCompare(String(valueOf(b, sortKey)), undefined, { numeric: true }) * sortDir);
@@ -310,9 +448,7 @@
     shown = list;
     countEl.innerHTML = 'Showing <b>' + list.length + '</b> of ' + rows.length + ' students';
     updateStats(list);
-
     if (!list.length) { showState('Nothing here', 'No records match your search or filter.'); return; }
-
     const cols = getColumns();
     const table = document.createElement('table');
     const head = table.createTHead().insertRow();
@@ -341,7 +477,6 @@
       th.appendChild(btn);
       head.appendChild(th);
     });
-
     const body = table.createTBody();
     list.forEach(r => {
       const tr = body.insertRow();
@@ -386,7 +521,6 @@
     view.innerHTML = '';
     view.appendChild(table);
   }
-
   function fillFilter(sel, key, allLabel) {
     if (!key) { sel.hidden = true; return; }
     const keep = sel.value;
@@ -404,7 +538,6 @@
     sel.value = Array.from(sel.options).some(o => o.value === keep) ? keep : '';
     sel.hidden = false;
   }
-
   function exportCsv() {
     const cols = getColumns().filter(c => c.key !== '__rate');
     const esc = v => '"' + String(v).replace(/"/g, '""') + '"';
@@ -419,10 +552,8 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
-
   /* ---------- Add record form ---------- */
   function setMsg(text, err) { msgEl.textContent = text; msgEl.className = 'msg' + (err ? ' err' : ''); }
-
   function buildForm() {
     const box = $('fields');
     box.innerHTML = '';
@@ -481,13 +612,11 @@
     pass.autocomplete = 'off';
     add('Passcode', pass);
   }
-
   $('toggleForm').addEventListener('click', () => {
     addForm.hidden = !addForm.hidden;
     if (!addForm.hidden) { setMsg(''); const f = addForm.querySelector('input'); if (f) f.focus(); }
   });
   $('cancelForm').addEventListener('click', () => { addForm.hidden = true; });
-
   addForm.addEventListener('submit', async e => {
     e.preventDefault();
     const match = {};
@@ -516,7 +645,6 @@
       btn.disabled = false;
     }
   });
-
   /* ---------- Load ---------- */
   async function load() {
     try {
@@ -558,12 +686,10 @@
       showState('Could not load records', 'Check your connection and try again. If it keeps happening, the API may be offline.', true);
     }
   }
-
   searchEl.addEventListener('input', render);
   subjEl.addEventListener('change', render);
   sectEl.addEventListener('change', render);
   $('exportBtn').addEventListener('click', () => { if (shown.length) exportCsv(); else toast('Nothing to export', 'err'); });
-
   showSkeleton();
   load();
 </script>
